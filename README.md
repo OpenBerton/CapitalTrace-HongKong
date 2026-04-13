@@ -51,15 +51,15 @@ npm install
 1. 啟動後端
 
 ```bash
-cd /Users/bertonkhw/Desktop/CapitalTrace/backend
-. .venv/bin/activate
+cd /Users/bertonkhw/Desktop/CapitalTrace-HongKong/backend
+source .venv/bin/activate
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 2. 開啟新終端，啟動前端
 
 ```bash
-cd /Users/bertonkhw/Desktop/CapitalTrace/frontend
+cd /Users/bertonkhw/Desktop/CapitalTrace-HongKong/frontend
 npm install
 npm run dev
 ```

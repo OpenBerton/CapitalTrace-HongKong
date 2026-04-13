@@ -1,9 +1,14 @@
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.controllers.chip_controller import router as chip_router
 from app.core.exceptions import CCASSNotFoundError, CCASSParseError, CCASSServiceError
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
 
 app = FastAPI(
     title="CCASS Chip Analyzer",
@@ -20,6 +25,22 @@ app.add_middleware(
 )
 
 app.include_router(chip_router, prefix="/api/v1")
+
+
+@app.get("/", include_in_schema=False)
+async def serve_spa_root() -> FileResponse:
+    return FileResponse(FRONTEND_DIST / "index.html")
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_spa(full_path: str) -> FileResponse:
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    requested_file = FRONTEND_DIST / full_path
+    if requested_file.exists() and requested_file.is_file():
+        return FileResponse(requested_file)
+    return FileResponse(FRONTEND_DIST / "index.html")
 
 
 @app.exception_handler(CCASSNotFoundError)

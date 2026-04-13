@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import LoadingSpinner from "../components/LoadingSpinner";
 import HoldingDistributionChart from "../components/HoldingDistributionChart";
 import TopParticipantsTable from "../components/TopParticipantsTable";
-import useDebouncedValue from "../hooks/useDebouncedValue";
 import useFetchChips from "../hooks/useFetchChips";
 
 const STOCK_CODE_PATTERN = /^\d{1,6}$/;
@@ -12,9 +11,6 @@ export default function Dashboard() {
   const [stockCode, setStockCode] = useState("");
   const [date, setDate] = useState("");
   const [validationError, setValidationError] = useState("");
-  const [lastFetchArgs, setLastFetchArgs] = useState({ stockCode: "", date: "" });
-  const debouncedStockCode = useDebouncedValue(stockCode);
-  const debouncedDate = useDebouncedValue(date);
   const { data, loading, error, fetchData } = useFetchChips();
 
   const isInputComplete = useMemo(
@@ -46,31 +42,8 @@ export default function Dashboard() {
     }
 
     fetchData(trimmedStockCode, trimmedDate);
-    setLastFetchArgs({ stockCode: trimmedStockCode, date: trimmedDate });
   };
 
-  useEffect(() => {
-    const trimmedStockCode = debouncedStockCode.trim();
-    const trimmedDate = debouncedDate.trim();
-
-    if (!trimmedStockCode || !trimmedDate) {
-      return;
-    }
-
-    if (!validateInputs(trimmedStockCode, trimmedDate)) {
-      return;
-    }
-
-    if (
-      trimmedStockCode === lastFetchArgs.stockCode &&
-      trimmedDate === lastFetchArgs.date
-    ) {
-      return;
-    }
-
-    fetchData(trimmedStockCode, trimmedDate);
-    setLastFetchArgs({ stockCode: trimmedStockCode, date: trimmedDate });
-  }, [debouncedStockCode, debouncedDate, lastFetchArgs, fetchData]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-8">
@@ -90,7 +63,7 @@ export default function Dashboard() {
 
       {!isInputComplete && (
         <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-slate-700">
-          輸入股票代號與日期後即可查詢，系統會在停止輸入後 400ms 自動查詢。
+          請輸入股票代號與日期，然後按「查詢籌碼」。
         </div>
       )}
 
