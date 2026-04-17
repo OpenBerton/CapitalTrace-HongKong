@@ -98,7 +98,7 @@ export default function Dashboard() {
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-8">
       <header className="rounded-xl bg-slate-900 p-6 text-white shadow-lg">
         <h1 className="text-3xl font-bold">港股 CCASS 主力籌碼即時分析</h1>
-        <p className="mt-2 text-slate-300">輸入股票代號與日期，即時抓取 CCASS 籌碼分佈並呈現前十大券商集中度。</p>
+        <p className="mt-2 text-slate-300">輸入股票代號與日期，即時抓取 CCASS 籌碼分佈並呈現前二十大券商集中度。</p>
       </header>
       <SearchBar
         stockCode={stockCode}
@@ -146,7 +146,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>前十大集中度</span>
+                <span>前二十大集中度</span>
                 <span className="font-medium">{Number(data.total_top_share_ratio).toFixed(2)}%</span>
               </div>
               <div className="flex justify-between">

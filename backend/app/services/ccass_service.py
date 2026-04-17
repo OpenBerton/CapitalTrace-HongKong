@@ -29,6 +29,7 @@ _FORM_CACHE: tuple[float, dict[str, str], str] | None = None
 _FORM_CACHE_LOCK = asyncio.Lock()
 ENRICHMENT_TIMEOUT_SECONDS = 6
 ENRICHMENT_TIMEOUT_SECONDS_ENRICHED = 20
+TOP_PARTICIPANTS_LIMIT = 20
 
 
 def _normalize_numeric(value: str) -> float:
@@ -296,7 +297,7 @@ async def _fetch_ccass_participants_for_date(
         )
 
         participants: list[dict[str, object]] = []
-        for row in mobile_rows[:10]:
+        for row in mobile_rows[:TOP_PARTICIPANTS_LIMIT]:
             name = row.get(name_key) if name_key else None
             if not name:
                 name = row.get(
@@ -335,7 +336,7 @@ async def _fetch_ccass_participants_for_date(
         return None
 
     participants: list[dict[str, object]] = []
-    for row in data_rows[:10]:
+    for row in data_rows[:TOP_PARTICIPANTS_LIMIT]:
         name = row[name_index] if name_index is not None else row[0]
         share = _normalize_numeric(row[share_index])
         percentage = _normalize_numeric(row[percentage_index]) if percentage_index is not None else 0.0
