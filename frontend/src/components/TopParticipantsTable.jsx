@@ -1,7 +1,7 @@
 import { formatNumber } from "../utils/numberFormat";
 import { formatPercent } from "../utils/percentFormat";
 
-export default function TopParticipantsTable({ participants }) {
+export default function TopParticipantsTable({ participants, enriching = false }) {
   return (
     <div className="overflow-x-auto rounded-xl bg-white p-4 shadow-sm">
       <h2 className="mb-4 text-lg font-semibold text-slate-800">前十大券商明細</h2>
@@ -11,16 +11,39 @@ export default function TopParticipantsTable({ participants }) {
             <th className="border-b px-4 py-2 text-left">名稱</th>
             <th className="border-b px-4 py-2 text-right">持股</th>
             <th className="border-b px-4 py-2 text-right">佔比(%)</th>
+            <th className="border-b px-4 py-2 text-right">變化數量</th>
           </tr>
         </thead>
         <tbody>
-          {participants.map((item, index) => (
-            <tr key={index} className={index % 2 === 0 ? "bg-slate-50" : ""}>
-              <td className="border-b px-4 py-2">{item.name || "-"}</td>
-              <td className="border-b px-4 py-2 text-right">{formatNumber(item.share)}</td>
-              <td className="border-b px-4 py-2 text-right">{formatPercent(item.percentage)}</td>
-            </tr>
-          ))}
+          {participants.map((item, index) => {
+            const deltaShares = item.deltaShares;
+            const deltaLabel = (enriching && deltaShares == null)
+              ? "..."
+              : deltaShares === undefined
+              ? "..."
+              : deltaShares === null
+              ? "N/A"
+              : deltaShares > 0
+              ? `+${formatNumber(deltaShares)}`
+              : formatNumber(deltaShares);
+            const deltaClass =
+              deltaShares > 0
+                ? "text-emerald-500 bg-emerald-50"
+                : deltaShares < 0
+                ? "text-red-500 bg-red-50"
+                : "text-gray-600";
+
+            return (
+              <tr key={index} className={index % 2 === 0 ? "bg-slate-50" : ""}>
+                <td className="border-b px-4 py-2">{item.name || "-"}</td>
+                <td className="border-b px-4 py-2 text-right">{formatNumber(item.share)}</td>
+                <td className="border-b px-4 py-2 text-right">{formatPercent(item.percentage)}</td>
+                <td className={`border-b px-4 py-2 text-right ${deltaClass}`}>
+                  {deltaLabel}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

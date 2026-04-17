@@ -6,6 +6,8 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from app.controllers.chip_controller import router as chip_router
 from app.core.exceptions import CCASSNotFoundError, CCASSParseError, CCASSServiceError
+from app.services.ccass_service import warm_ccass_form_cache
+from app.services.trading_day_service import warm_trading_days_cache
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
@@ -25,6 +27,12 @@ app.add_middleware(
 )
 
 app.include_router(chip_router, prefix="/api/v1")
+
+
+@app.on_event("startup")
+async def warmup_ccass_metadata() -> None:
+    await warm_ccass_form_cache()
+    await warm_trading_days_cache()
 
 
 @app.get("/", include_in_schema=False)

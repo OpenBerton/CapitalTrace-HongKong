@@ -11,3 +11,11 @@ body {
 #root {
   min-height: 100vh;
 }
+
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container {
+  width: 100%;
+}
