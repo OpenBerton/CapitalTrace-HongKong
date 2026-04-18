@@ -1,10 +1,8 @@
 # CCASS Chip Analyzer
 
-English version: [README.en.md](README.en.md)
+A real-time Hong Kong CCASS major holding analysis web app with a stateless frontend-backend architecture. The backend uses FastAPI to fetch CCASS source pages in real time, while the frontend uses React, Vite, and Tailwind to render charts and holding insights.
 
-港股 CCASS 主力籌碼即時分析網站，採用前後端分離的無狀態架構。後端透過 FastAPI 即時爬取 CCASS 原始頁面，前端使用 React、Vite 與 Tailwind 渲染籌碼圖表。
-
-## 專案結構
+## Project Structure
 
 - `backend/`
   - `app/`
@@ -27,13 +25,13 @@ English version: [README.en.md](README.en.md)
   - `tailwind.config.js`
   - `postcss.config.js`
 
-## 安裝指南
+## Installation
 
-先進入專案根目錄（也就是包含 `backend/` 與 `frontend/` 的資料夾）。
+Start from the project root directory (the folder that contains both `backend/` and `frontend/`).
 
 ### macOS / Linux
 
-1. 安裝後端依賴
+1. Install backend dependencies
 
 ```bash
 cd backend
@@ -42,7 +40,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. 安裝前端依賴
+2. Install frontend dependencies
 
 ```bash
 cd frontend
@@ -51,7 +49,7 @@ npm install
 
 ### Windows
 
-1. 安裝後端依賴（PowerShell）
+1. Install backend dependencies (PowerShell)
 
 ```powershell
 cd backend
@@ -60,7 +58,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-2. 安裝後端依賴（Command Prompt）
+2. Install backend dependencies (Command Prompt)
 
 ```bat
 cd backend
@@ -69,20 +67,20 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-3. 安裝前端依賴
+3. Install frontend dependencies
 
 ```powershell
 cd frontend
 npm install
 ```
 
-> 如果你的系統尚未安裝 Node.js，請先安裝 Node.js / npm。
+> If Node.js is not installed on your machine, install Node.js and npm first.
 
-## 啟動服務
+## Run the App
 
 ### macOS / Linux
 
-1. 啟動後端 API
+1. Start backend API
 
 ```bash
 cd backend
@@ -90,14 +88,14 @@ source .venv/bin/activate
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-2. 開啟新終端，啟動前端
+2. Open a new terminal and start frontend
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-3. 在瀏覽器打開
+3. Open in your browser
 
 ```text
 http://localhost:5173
@@ -105,7 +103,7 @@ http://localhost:5173
 
 ### Windows
 
-1. 啟動後端 API（PowerShell）
+1. Start backend API (PowerShell)
 
 ```powershell
 cd backend
@@ -113,7 +111,7 @@ cd backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-2. 啟動後端 API（Command Prompt）
+2. Start backend API (Command Prompt)
 
 ```bat
 cd backend
@@ -121,22 +119,22 @@ cd backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-3. 開啟新終端，啟動前端
+3. Open a new terminal and start frontend
 
 ```powershell
 cd frontend
 npm run dev
 ```
 
-4. 在瀏覽器打開
+4. Open in your browser
 
 ```text
 http://localhost:5173
 ```
 
-## 健康檢查
+## Health Check
 
-如果要確認後端是否成功啟動，測試：
+To verify the backend is running:
 
 ```text
 http://localhost:8000/healthz
