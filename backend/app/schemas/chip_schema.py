@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class ParticipantSchema(BaseModel):
+    participantId: str | None = None
     name: str
     share: float | int
     percentage: float | int

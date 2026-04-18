@@ -216,6 +216,13 @@ def _normalize_participant_name(name: str) -> str:
     return re.sub(r"\s+", " ", name.strip().lower())
 
 
+def _participant_match_key(item: dict[str, object]) -> str:
+    participant_id = str(item.get("participantId") or "").strip().lower()
+    if participant_id:
+        return f"id:{participant_id}"
+    return f"name:{_normalize_participant_name(str(item.get('name') or ''))}"
+
+
 async def _resolve_ccass_dates_for_query_date(query_date: str) -> tuple[str, str]:
     trading_days = await get_trading_days()
     if query_date not in trading_days:
@@ -287,6 +294,10 @@ async def _fetch_ccass_participants_for_date(
             list(mobile_rows[0].keys()),
             ["name of ccass participant", "participant name", "participant", "名稱", "參與者"],
         )
+        participant_id_key = _find_mobile_heading(
+            list(mobile_rows[0].keys()),
+            ["participant id", "ccass participant id", "參與者編號", "編號"],
+        )
         share_key = _find_mobile_heading(
             list(mobile_rows[0].keys()),
             ["shareholding", "shareholding:", "shareholding", "持股", "股數"],
@@ -298,6 +309,7 @@ async def _fetch_ccass_participants_for_date(
 
         participants: list[dict[str, object]] = []
         for row in mobile_rows[:TOP_PARTICIPANTS_LIMIT]:
+            participant_id = row.get(participant_id_key) if participant_id_key else None
             name = row.get(name_key) if name_key else None
             if not name:
                 name = row.get(
@@ -309,6 +321,7 @@ async def _fetch_ccass_participants_for_date(
             share = _normalize_numeric(row.get(share_key, "0")) if share_key else 0.0
             percentage = _normalize_numeric(row.get(percentage_key, "0")) if percentage_key else 0.0
             participants.append({
+                "participantId": participant_id,
                 "name": name or "Unknown",
                 "share": share,
                 "percentage": percentage,
@@ -328,6 +341,7 @@ async def _fetch_ccass_participants_for_date(
     if not data_rows:
         return None
 
+    participant_id_index = _find_column_index(header, ["participant id", "ccass participant id", "參與者編號", "編號"])
     name_index = _find_column_index(header, ["名稱", "參與者", "券商", "機構"])
     share_index = _find_column_index(header, ["持股", "股數", "持股量"])
     percentage_index = _find_column_index(header, ["%", "佔比", "持股比例", "比例"])
@@ -337,10 +351,12 @@ async def _fetch_ccass_participants_for_date(
 
     participants: list[dict[str, object]] = []
     for row in data_rows[:TOP_PARTICIPANTS_LIMIT]:
+        participant_id = row[participant_id_index] if participant_id_index is not None else None
         name = row[name_index] if name_index is not None else row[0]
         share = _normalize_numeric(row[share_index])
         percentage = _normalize_numeric(row[percentage_index]) if percentage_index is not None else 0.0
         participants.append({
+            "participantId": participant_id,
             "name": name,
             "share": share,
             "percentage": percentage,
@@ -511,7 +527,7 @@ async def _enrich_with_market_data(
     timeout_seconds: int = ENRICHMENT_TIMEOUT_SECONDS,
 ) -> tuple[float | None, dict[str, float]]:
     close_price: float | None = None
-    prev_share_map: dict[str, float] = {}
+    prev_share_map: dict[str, list[float]] = {}
 
     yahoo_task = asyncio.create_task(
         _fetch_yahoo_history_async(stock_code_normalized, query_date)
@@ -553,7 +569,8 @@ async def _enrich_with_market_data(
         return close_price, prev_share_map
 
     for prev_item in prev_value["participants"]:
-        prev_share_map[_normalize_participant_name(prev_item["name"])] = float(prev_item.get("share", 0.0))
+        key = _participant_match_key(prev_item)
+        prev_share_map.setdefault(key, []).append(float(prev_item.get("share", 0.0)))
 
     return close_price, prev_share_map
 
@@ -663,7 +680,9 @@ async def fetch_chip_data_enriched(stock_code: str, date: str) -> dict[str, obje
         if not prev_share_map:
             item["deltaShares"] = None
         else:
-            prev_share = prev_share_map.get(_normalize_participant_name(item["name"]), 0.0)
+            key = _participant_match_key(item)
+            prev_share_candidates = prev_share_map.get(key, [])
+            prev_share = prev_share_candidates.pop(0) if prev_share_candidates else 0.0
             item["deltaShares"] = float(item["share"]) - prev_share
 
     result = {
