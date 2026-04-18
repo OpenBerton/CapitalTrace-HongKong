@@ -15,134 +15,35 @@ from urllib.parse import urljoin
 
 from app.config import CCASS_BASE_URL, REQUEST_TIMEOUT
 from app.core.exceptions import CCASSParseError, CCASSNotFoundError
+from app.services.ccass.constants import (
+    CACHE_TTL_SECONDS,
+    CCASS_USER_AGENT,
+    ENRICHMENT_TIMEOUT_SECONDS,
+    ENRICHMENT_TIMEOUT_SECONDS_ENRICHED,
+    FORM_CACHE_TTL_SECONDS,
+    TOP_PARTICIPANTS_LIMIT,
+)
+from app.services.ccass.parsers import (
+    extract_form_data,
+    extract_mobile_rows,
+    extract_table_rows,
+    find_column_index,
+    find_mobile_heading,
+    find_result_table,
+    format_query_date,
+    is_mobile_table,
+    normalize_numeric,
+)
 from app.services.trading_day_service import get_trading_days
 from app.utils.date_utils import normalize_date
 from app.utils.stock_utils import normalize_stock_code
 from app.utils.html_utils import clean_html
 
 logger = logging.getLogger(__name__)
-CACHE_TTL_SECONDS = 3 * 3600
 _CACHE: dict[tuple[str, str], tuple[float, dict[str, object]]] = {}
 _CACHE_LOCK = asyncio.Lock()
-FORM_CACHE_TTL_SECONDS = 6 * 3600
 _FORM_CACHE: tuple[float, dict[str, str], str] | None = None
 _FORM_CACHE_LOCK = asyncio.Lock()
-ENRICHMENT_TIMEOUT_SECONDS = 6
-ENRICHMENT_TIMEOUT_SECONDS_ENRICHED = 20
-TOP_PARTICIPANTS_LIMIT = 20
-
-
-def _normalize_numeric(value: str) -> float:
-    """清洗數值欄位，移除逗號、百分號與全形空白後轉換為浮點數。"""
-    cleaned = (
-        str(value)
-        .replace(",", "")
-        .replace("%", "")
-        .replace("\u3000", "")
-        .strip()
-    )
-    return float(pd.to_numeric(cleaned, errors="coerce") or 0.0)
-
-
-def _extract_table_rows(table) -> list[list[str]]:
-    rows: list[list[str]] = []
-    for tr in table.find_all("tr"):
-        cells = [cell.get_text(strip=True) for cell in tr.find_all(["th", "td"])]
-        if cells:
-            rows.append(cells)
-    return rows
-
-
-def _find_column_index(columns: list[str], keywords: list[str]) -> int | None:
-    lower_columns = [col.lower() for col in columns]
-    for keyword in keywords:
-        for index, col in enumerate(lower_columns):
-            if keyword in col:
-                return index
-    return None
-
-
-def _is_valid_header_row(header: list[str]) -> bool:
-    keywords = [
-        "participant",
-        "參與者",
-        "券商",
-        "機構",
-        "shareholding",
-        "股數",
-        "持股",
-        "%",
-        "percentage",
-        "佔比",
-        "持股比例",
-        "比例",
-    ]
-    for cell in header:
-        if not cell:
-            continue
-        if len(cell) > 120:
-            continue
-        if _find_column_index([cell], keywords) is not None:
-            return True
-    return False
-
-
-def _extract_mobile_rows(table) -> list[dict[str, str]]:
-    rows: list[dict[str, str]] = []
-    for tr in table.find_all("tr"):
-        row: dict[str, str] = {}
-        for td in tr.find_all("td"):
-            heading = td.find(class_=re.compile(r"mobile-list-heading", re.I))
-            body = td.find(class_=re.compile(r"mobile-list-body", re.I))
-            if heading and body:
-                row[heading.get_text(strip=True)] = body.get_text(strip=True)
-        if row:
-            rows.append(row)
-    return rows
-
-
-def _find_mobile_heading(columns: list[str], keywords: list[str]) -> str | None:
-    for keyword in keywords:
-        for column in columns:
-            if keyword in column.lower():
-                return column
-    return None
-
-
-def _is_mobile_table(table) -> bool:
-    return table.find(class_=re.compile(r"mobile-list-heading", re.I)) is not None
-
-
-def _find_result_table(soup: BeautifulSoup) -> BeautifulSoup | None:
-    candidate_table = None
-    for table in soup.find_all("table"):
-        if _is_mobile_table(table):
-            mobile_rows = _extract_mobile_rows(table)
-            if mobile_rows:
-                return table
-
-        classes = table.get("class", []) or []
-        if any(isinstance(c, str) and ("search-result-table" in c or "table-scroll" in c) for c in classes):
-            candidate_table = table
-            continue
-
-        rows = _extract_table_rows(table)
-        if len(rows) <= 1:
-            continue
-        header = rows[0]
-        if _is_valid_header_row(header):
-            return table
-
-    return candidate_table
-
-
-def _format_query_date(date_str: str) -> str:
-    """將 YYYY-MM-DD 格式轉換為 ASP.NET 表單需要的 YYYY/MM/DD。"""
-    try:
-        parsed = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-        return parsed.strftime("%Y/%m/%d")
-    except ValueError as exc:
-        raise ValueError("日期格式不正確，請使用 YYYY-MM-DD。") from exc
 
 
 def _hk_yahoo_ticker(stock_code: str) -> str:
@@ -156,60 +57,6 @@ def _hk_yahoo_ticker(stock_code: str) -> str:
 def _hk_yahoo_ticker_candidates(stock_code: str) -> list[str]:
     # HK equities on Yahoo normally use 4-digit codes, e.g. 0700.HK.
     return [_hk_yahoo_ticker(stock_code)]
-
-
-def _fetch_close_price(stock_code: str, query_date: str) -> float | None:
-    try:
-        target_date = datetime.datetime.strptime(query_date, "%Y-%m-%d").date()
-        ticker = yf.Ticker(_hk_yahoo_ticker(stock_code))
-        start_date = target_date - datetime.timedelta(days=14)
-        end_date = target_date + datetime.timedelta(days=1)
-        hist = ticker.history(
-            start=start_date.isoformat(),
-            end=end_date.isoformat(),
-            interval="1d",
-            actions=False,
-        )
-        if hist.empty:
-            return None
-
-        dates = [dt.date() for dt in pd.to_datetime(hist.index)]
-        if target_date in dates:
-            return float(hist.loc[pd.to_datetime(target_date).strftime("%Y-%m-%d"), "Close"])
-
-        prior_dates = [d for d in dates if d < target_date]
-        if prior_dates:
-            nearest = max(prior_dates)
-            return float(hist.loc[pd.to_datetime(nearest).strftime("%Y-%m-%d"), "Close"])
-        return None
-    except Exception:
-        return None
-
-
-def _get_previous_trading_date(stock_code: str, query_date: str) -> str | None:
-    try:
-        target_date = datetime.datetime.strptime(query_date, "%Y-%m-%d").date()
-        ticker = yf.Ticker(_hk_yahoo_ticker(stock_code))
-        start_date = target_date - datetime.timedelta(days=30)
-        end_date = target_date + datetime.timedelta(days=1)
-        hist = ticker.history(
-            start=start_date.isoformat(),
-            end=end_date.isoformat(),
-            interval="1d",
-            actions=False,
-        )
-        if hist.empty:
-            return None
-
-        trade_dates = sorted({dt.date() for dt in pd.to_datetime(hist.index)})
-        if target_date in trade_dates:
-            index = trade_dates.index(target_date)
-            return trade_dates[index - 1].isoformat() if index > 0 else None
-
-        prior_dates = [d for d in trade_dates if d < target_date]
-        return prior_dates[-1].isoformat() if prior_dates else None
-    except Exception:
-        return None
 
 
 def _normalize_participant_name(name: str) -> str:
@@ -281,28 +128,28 @@ async def _fetch_ccass_participants_for_date(
 
     html = clean_html(response.text)
     soup = BeautifulSoup(html, "lxml")
-    table = _find_result_table(soup)
+    table = find_result_table(soup)
     if table is None:
         return None
 
-    if _is_mobile_table(table):
-        mobile_rows = _extract_mobile_rows(table)
+    if is_mobile_table(table):
+        mobile_rows = extract_mobile_rows(table)
         if not mobile_rows:
             return None
 
-        name_key = _find_mobile_heading(
+        name_key = find_mobile_heading(
             list(mobile_rows[0].keys()),
             ["name of ccass participant", "participant name", "participant", "名稱", "參與者"],
         )
-        participant_id_key = _find_mobile_heading(
+        participant_id_key = find_mobile_heading(
             list(mobile_rows[0].keys()),
             ["participant id", "ccass participant id", "參與者編號", "編號"],
         )
-        share_key = _find_mobile_heading(
+        share_key = find_mobile_heading(
             list(mobile_rows[0].keys()),
             ["shareholding", "shareholding:", "shareholding", "持股", "股數"],
         )
-        percentage_key = _find_mobile_heading(
+        percentage_key = find_mobile_heading(
             list(mobile_rows[0].keys()),
             ["percentage", "%", "佔比", "持股比例", "比例"],
         )
@@ -313,13 +160,13 @@ async def _fetch_ccass_participants_for_date(
             name = row.get(name_key) if name_key else None
             if not name:
                 name = row.get(
-                    _find_mobile_heading(
+                    find_mobile_heading(
                         list(row.keys()),
                         ["participant id", "participant name", "participant", "名稱", "參與者"],
                     )
                 )
-            share = _normalize_numeric(row.get(share_key, "0")) if share_key else 0.0
-            percentage = _normalize_numeric(row.get(percentage_key, "0")) if percentage_key else 0.0
+            share = normalize_numeric(row.get(share_key, "0")) if share_key else 0.0
+            percentage = normalize_numeric(row.get(percentage_key, "0")) if percentage_key else 0.0
             participants.append({
                 "participantId": participant_id,
                 "name": name or "Unknown",
@@ -332,7 +179,7 @@ async def _fetch_ccass_participants_for_date(
             "raw_columns": list(mobile_rows[0].keys()),
         }
 
-    rows = _extract_table_rows(table)
+    rows = extract_table_rows(table)
     if len(rows) <= 1:
         return None
 
@@ -341,10 +188,10 @@ async def _fetch_ccass_participants_for_date(
     if not data_rows:
         return None
 
-    participant_id_index = _find_column_index(header, ["participant id", "ccass participant id", "參與者編號", "編號"])
-    name_index = _find_column_index(header, ["名稱", "參與者", "券商", "機構"])
-    share_index = _find_column_index(header, ["持股", "股數", "持股量"])
-    percentage_index = _find_column_index(header, ["%", "佔比", "持股比例", "比例"])
+    participant_id_index = find_column_index(header, ["participant id", "ccass participant id", "參與者編號", "編號"])
+    name_index = find_column_index(header, ["名稱", "參與者", "券商", "機構"])
+    share_index = find_column_index(header, ["持股", "股數", "持股量"])
+    percentage_index = find_column_index(header, ["%", "佔比", "持股比例", "比例"])
 
     if share_index is None:
         return None
@@ -353,8 +200,8 @@ async def _fetch_ccass_participants_for_date(
     for row in data_rows[:TOP_PARTICIPANTS_LIMIT]:
         participant_id = row[participant_id_index] if participant_id_index is not None else None
         name = row[name_index] if name_index is not None else row[0]
-        share = _normalize_numeric(row[share_index])
-        percentage = _normalize_numeric(row[percentage_index]) if percentage_index is not None else 0.0
+        share = normalize_numeric(row[share_index])
+        percentage = normalize_numeric(row[percentage_index]) if percentage_index is not None else 0.0
         participants.append({
             "participantId": participant_id,
             "name": name,
@@ -366,29 +213,6 @@ async def _fetch_ccass_participants_for_date(
         "participants": participants,
         "raw_columns": header,
     }
-
-
-def _extract_form_data(html: str) -> tuple[dict[str, str], str]:
-    soup = BeautifulSoup(html, "lxml")
-    form = soup.find("form")
-    if form is None:
-        raise CCASSParseError("無法取得 CCASS 頁面表單，網站格式可能已變更。")
-
-    action = form.get("action") or CCASS_BASE_URL
-    hidden_fields = {
-        inp["name"]: inp.get("value", "")
-        for inp in form.find_all("input", attrs={"type": "hidden"})
-        if inp.get("name")
-    }
-
-    submit_button = form.find("input", attrs={"type": "submit", "name": "btnSearch"})
-    if submit_button is None:
-        submit_button = form.find("button", attrs={"name": "btnSearch"})
-    if submit_button is not None and submit_button.get("name"):
-        hidden_fields[submit_button["name"]] = submit_button.get("value", "")
-
-    return hidden_fields, action
-
 
 def _fetch_yahoo_history(stock_code: str, query_date: str) -> tuple[float | None, str | None]:
     target_date = datetime.datetime.strptime(query_date, "%Y-%m-%d").date()
@@ -493,7 +317,7 @@ async def _fetch_form_metadata(client: httpx.AsyncClient) -> tuple[dict[str, str
     except httpx.HTTPError as exc:
         raise ConnectionError("無法連線到 CCASS 服務，請檢查網路或 URL 設定。") from exc
 
-    form_fields, action_url = _extract_form_data(clean_html(initial_response.text))
+    form_fields, action_url = extract_form_data(clean_html(initial_response.text))
     action_url = urljoin(str(initial_response.url), action_url)
     await _set_cached_form_metadata(form_fields, action_url)
     return form_fields, action_url
@@ -505,8 +329,7 @@ async def warm_ccass_form_cache() -> None:
         client.headers.update(
             {
                 "User-Agent": (
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+                    CCASS_USER_AGENT
                 )
             }
         )
@@ -538,7 +361,7 @@ async def _enrich_with_market_data(
             action_url,
             form_fields,
             stock_code_normalized,
-            _format_query_date(ccass_compare_date),
+            format_query_date(ccass_compare_date),
         )
     )
 
@@ -588,7 +411,7 @@ async def fetch_chip_data(stock_code: str, date: str) -> dict[str, object]:
     stock_code_normalized = normalize_stock_code(stock_code)
     query_date = normalize_date(date)
     ccass_compare_date, ccass_target_date = await _resolve_ccass_dates_for_query_date(query_date)
-    ccass_target_date_formatted = _format_query_date(ccass_target_date)
+    ccass_target_date_formatted = format_query_date(ccass_target_date)
 
     cached = await _get_cached_chip_data(stock_code_normalized, query_date)
     if cached is not None:
@@ -598,8 +421,7 @@ async def fetch_chip_data(stock_code: str, date: str) -> dict[str, object]:
         client.headers.update(
             {
                 "User-Agent": (
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+                    CCASS_USER_AGENT
                 )
             }
         )
@@ -658,8 +480,7 @@ async def fetch_chip_data_enriched(stock_code: str, date: str) -> dict[str, obje
         client.headers.update(
             {
                 "User-Agent": (
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+                    CCASS_USER_AGENT
                 )
             }
         )

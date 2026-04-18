@@ -10,6 +10,7 @@
     - `services/`
     - `schemas/`
     - `utils/`
+  - `scripts/`
   - `requirements.txt`
   - `.env`
 - `frontend/`

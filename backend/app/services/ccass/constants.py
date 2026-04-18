@@ -1,0 +1,12 @@
+from __future__ import annotations
+
+CACHE_TTL_SECONDS = 3 * 3600
+FORM_CACHE_TTL_SECONDS = 6 * 3600
+ENRICHMENT_TIMEOUT_SECONDS = 6
+ENRICHMENT_TIMEOUT_SECONDS_ENRICHED = 20
+TOP_PARTICIPANTS_LIMIT = 20
+
+CCASS_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+)

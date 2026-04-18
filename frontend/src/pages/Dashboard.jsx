@@ -1,97 +1,40 @@
-import { useEffect, useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import LoadingSpinner from "../components/LoadingSpinner";
 import HoldingDistributionChart from "../components/HoldingDistributionChart";
 import TopParticipantsTable from "../components/TopParticipantsTable";
 import useFetchChips from "../hooks/useFetchChips";
-import { fetchTradingDays } from "../api/chipApi";
-
-const STOCK_CODE_PATTERN = /^\d{1,6}$/;
-
-function todayIso() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+import useChipQueryForm from "../hooks/useChipQueryForm";
+import useTradingDays from "../hooks/useTradingDays";
 
 export default function Dashboard() {
-  const [stockCode, setStockCode] = useState("");
-  const [date, setDate] = useState("");
-  const [validTradingDays, setValidTradingDays] = useState([]);
-  const [tradingDaysLoading, setTradingDaysLoading] = useState(true);
-  const [validationError, setValidationError] = useState("");
+  const {
+    stockCode,
+    date,
+    validationError,
+    isInputComplete,
+    setStockCode,
+    setDate,
+    validateInputs,
+  } = useChipQueryForm();
+  const {
+    validTradingDays,
+    tradingDaysLoading,
+    tradingDaysError,
+  } = useTradingDays(setDate);
   const { data, loading, enriching, error, fetchData } = useFetchChips();
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadTradingDays() {
-      setTradingDaysLoading(true);
-      try {
-        const days = await fetchTradingDays();
-        if (!isMounted) {
-          return;
-        }
-        const cappedDays = days.filter((item) => item <= todayIso());
-        const selectableDays = cappedDays.length > 2 ? cappedDays.slice(0, -2) : [];
-        setValidTradingDays(selectableDays);
-        if (selectableDays.length > 0) {
-          setDate((prevDate) => (selectableDays.includes(prevDate) ? prevDate : selectableDays[selectableDays.length - 1]));
-        }
-      } catch {
-        if (isMounted) {
-          setValidationError("交易日清單載入失敗，請稍後重試。");
-        }
-      } finally {
-        if (isMounted) {
-          setTradingDaysLoading(false);
-        }
-      }
-    }
-
-    loadTradingDays();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const isInputComplete = useMemo(
-    () => stockCode.trim().length > 0 && date.trim().length > 0,
-    [stockCode, date],
-  );
-
-  const validateInputs = (code, queryDate) => {
-    if (!code || !queryDate) {
-      setValidationError("請輸入股票代號與查詢日期。");
-      return false;
-    }
-
-    if (!STOCK_CODE_PATTERN.test(code)) {
-      setValidationError("股票代號必須為 1 到 6 位數字，例如 00700。");
-      return false;
-    }
-
-    if (validTradingDays.length > 0 && !validTradingDays.includes(queryDate)) {
-      setValidationError("請選擇有效的港股交易日。");
-      return false;
-    }
-
-    setValidationError("");
-    return true;
-  };
 
   const handleSearch = () => {
     const trimmedStockCode = stockCode.trim();
     const trimmedDate = date.trim();
 
-    if (!validateInputs(trimmedStockCode, trimmedDate)) {
+    if (!validateInputs(trimmedStockCode, trimmedDate, validTradingDays)) {
       return;
     }
 
     fetchData(trimmedStockCode, trimmedDate);
   };
+
+  const displayError = tradingDaysError || validationError;
 
 
   return (
@@ -109,7 +52,7 @@ export default function Dashboard() {
         onDateChange={setDate}
         onSearch={handleSearch}
         loading={loading}
-        validationError={validationError}
+        validationError={displayError}
       />
 
       {!isInputComplete && (

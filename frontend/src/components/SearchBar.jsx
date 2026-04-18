@@ -1,24 +1,7 @@
 import PropTypes from "prop-types";
 import DatePicker from "react-datepicker";
+import { buildIsoDateSet, formatIsoDate, parseIsoDate, toSelectableDates } from "../utils/datePickerUtils";
 import "react-datepicker/dist/react-datepicker.css";
-
-function parseIsoDate(value) {
-  if (!value) {
-    return null;
-  }
-  const [year, month, day] = value.split("-").map(Number);
-  if (!year || !month || !day) {
-    return null;
-  }
-  return new Date(year, month - 1, day);
-}
-
-function formatIsoDate(dateObj) {
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-  const day = String(dateObj.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 export default function SearchBar({
   stockCode,
@@ -31,17 +14,13 @@ export default function SearchBar({
   loading,
   validationError,
 }) {
-  const selectableDates = tradingDays
-    .map((tradingDay) => parseIsoDate(tradingDay))
-    .filter((item) => item);
+  const selectableDates = toSelectableDates(tradingDays);
 
   const maxSelectableDate = selectableDates.length > 0
     ? selectableDates[selectableDates.length - 1]
     : null;
 
-  const selectableDateSet = new Set(
-    selectableDates.map((item) => formatIsoDate(item)),
-  );
+  const selectableDateSet = buildIsoDateSet(selectableDates);
 
   const selectedDate = parseIsoDate(date);
 
