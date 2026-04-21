@@ -1,6 +1,44 @@
 # CCASS Chip Analyzer
 
-A real-time Hong Kong CCASS major holding analysis web app with a stateless frontend-backend architecture. The backend uses FastAPI to fetch CCASS source pages in real time, while the frontend uses React, Vite, and Tailwind to render charts and holding insights.
+Chinese version: [README.md](README.md)
+
+A Hong Kong CCASS holding analysis web app built with a frontend-backend architecture.
+The backend (FastAPI) fetches and normalizes HKEX CCASS data, while the frontend (React + Vite) visualizes participant holdings, concentration, and day-over-day changes.
+
+## Overview
+
+This project focuses on single-stock, single-date chip analysis with:
+
+- Top 20 participant holdings and ratios
+- Holding change in shares (`deltaShares`)
+- Holding change rate (%) versus previous settlement day
+- Custom selected-participant net flow summary
+- Two-stage loading for better perceived performance (quick base result, then enriched result)
+
+## Data Semantics
+
+- Query date (T): user-selected valid HK trading day
+- CCASS settlement date (T+2): returned as `ccass_settlement_date`
+- Comparison baseline (T+1): used for `deltaShares` and change-rate calculation
+- Frontend date picker is restricted to valid queryable dates
+
+## Key Features
+
+- Backend warmup + caching to reduce cold-start latency
+- Enriched endpoint for close price and participant deltas
+- Duplicate-name-safe matching (participant ID first)
+- API and SPA served from the same backend service
+
+## API Endpoints
+
+- `GET /api/v1/chips`
+  - Fast/base chip result
+- `GET /api/v1/chips/enriched`
+  - Enriched result (close price + deltas)
+- `GET /api/v1/trading-days`
+  - Valid trading-day list
+- `GET /healthz`
+  - Service health check
 
 ## Project Structure
 
