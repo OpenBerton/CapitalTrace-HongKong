@@ -26,7 +26,7 @@ export default function useTradingDays(onDateChange) {
           return;
         }
         const cappedDays = days.filter((item) => item <= todayIso());
-        const selectableDays = cappedDays.length > 3 ? cappedDays.slice(0, -3) : [];
+        const selectableDays = cappedDays.length > 2 ? cappedDays.slice(0, -2) : [];
         setValidTradingDays(selectableDays);
         if (selectableDays.length > 0) {
           onDateChange((prevDate) => (
