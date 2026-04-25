@@ -1,0 +1,25 @@
+GET status 200
+action_url https://www3.hkexnews.hk/sdw/search/searchsdw.aspx
+form_fields {'__EVENTTARGET': '', '__EVENTARGUMENT': '', '__VIEWSTATE': '/wEPDwULLTE1Nzg3NjcwNjdkZJW3ITBSje1dkFJLjneiDSfdsLh3', '__VIEWSTATEGENERATOR': 'A7B2BBE2', 'today': '20260423', 'sortBy': 'shareholding', 'sortDirection': 'desc', 'originalShareholdingDate': '', 'alertMsg': '', 'txtShareholdingDate': '2026/04/22', 'txtStockCode': '', 'txtStockName': '', 'txtParticipantID': '', 'txtParticipantName': '', 'txtSelPartID': ''}
+POST status 200
+response length 182311
+first 800 chars:
+ 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="news-hkex eng">
+<head><title>
+	CCASS Shareholding Search
+</title><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta http-equiv="X-UA-Compatible" content="IE=edge" /><meta property="manualPath" content="/sdw/search/searchsdw.aspx" /><meta property="description" content="A search engine to find shareholding information of CCASS Participants in the past of 12 months." /><meta property="keywords" content="CCASS Participant shareholding, participant shareholding, shareholding search, stock shareholding information" /><link href="/ncms/images/favicon.ico" rel="icon" /><lin
+table count 2
+TABLE 0 rows 10
+['1.', 'The shareholding information of CCASS Participants and other information made available under this CCASS shareholding search facility (the “Information”) is provided for your personal and non-commercial use only. HKEX and its subsidiaries do not take any responsibility for the Information, nor do they make any warranties, whether express or implied, as to the accuracy, adequacy, quality or fitness for any particular purpose or use of the Information and all such warranties are expressly excluded to the fullest extent that such warranties may be excluded by law. You agree to bear all risks from any use or reliance of or results of using or relying on any of the Information and acknowledge that the way you use or interpret the Information is dependent upon the exercise of your own skill and judgment. HKEX reserves the right to modify or discontinue, temporarily or permanently, the CCASS shareholding search facility and any part of the Information made available thereunder at any time with or without notice.']
+['', '']
+['2.', 'Unless you have been given express written permission by HKEX, you shall not, directly or indirectly:']
+['', '2.1', 'distribute, display, copy, modify, download, publish, post, transmit or otherwise make available or exploit the Information or any part of it in any format thereof to any third parties, whether or not for gain;']
+['', '2.2', 'create or compile derivative works (including, without limitation, through framing or systematic retrieval to create collections, compilations, databases or directories) from the Information or any part of it; or']
+TABLE 1 rows 230
+['Participant ID', 'Name of CCASS Participant(* for Consenting Investor Participants )', 'Address', 'Shareholding']
+['Participant ID:B01955', 'Name of CCASS Participant (* for Consenting Investor Participants ):FUTU SECURITIES INTERNATIONAL', 'Address:34/F UNITED CENTRE 95 QUEENSWAY ADMIRALTY HONG KONG', 'Shareholding:154,119,833']
+['Participant ID:B01590', 'Name of CCASS Participant (* for Consenting Investor Participants ):INTERACTIVE BROKERS HONG KONG LTD', 'Address:SUITE 1512 TWO PACIFIC PLACE 88 QUEENSWAY HONG KONG', 'Shareholding:130,463,700']
+['Participant ID:C00019', 'Name of CCASS Participant (* for Consenting Investor Participants ):THE HONGKONG AND SHANGHAI BANKING', 'Address:HSBC WEALTH BUSINESS SERVICES 8/F TOWER 2 & 3 HSBC CENTRE 1 SHAM MONG ROAD KOWLOON', 'Shareholding:103,205,042']
+['Participant ID:C00010', 'Name of CCASS Participant (* for Consenting Investor Participants ):CITIBANK N.A.', 'Address:9/F CITI TOWER ONE BAY EAST 83 HOI BUN ROAD KWUN TONG KOWLOON', 'Shareholding:48,813,600']

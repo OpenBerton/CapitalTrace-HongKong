@@ -1,0 +1,32 @@
+hidden inputs:
+__EVENTTARGET ''
+__EVENTARGUMENT ''
+__VIEWSTATE '/wEPDwULLTE1Nzg3NjcwNjdkZJW3ITBSje1dkFJLjneiDSfdsLh3'
+__VIEWSTATEGENERATOR 'A7B2BBE2'
+today '20260423'
+sortBy 'shareholding'
+sortDirection 'desc'
+originalShareholdingDate None
+alertMsg None
+
+BUTTONS:
+
+FORM ACTION:
+./searchsdw.aspx
+
+INPUT NAMES:
+__EVENTTARGET hidden ''
+__EVENTARGUMENT hidden ''
+__VIEWSTATE hidden '/wEPDwULLTE1Nzg3NjcwNjdkZJW3ITBSje1dkFJLjneiDSfdsLh3'
+__VIEWSTATEGENERATOR hidden 'A7B2BBE2'
+today hidden '20260423'
+sortBy hidden 'shareholding'
+sortDirection hidden 'desc'
+originalShareholdingDate hidden None
+alertMsg hidden None
+txtShareholdingDate text '2026/04/22'
+txtStockCode text None
+
+TABLE COUNT 1
+
+TABLE 0 first row ['1.', 'The shareholding information of CCASS Participants and other information made available under this CCASS shareholding search facility (the “Information”) is provided for your personal and non-commercial use only. HKEX and its subsidiaries do not take any responsibility for the Information, nor do they make any warranties, whether express or implied, as to the accuracy, adequacy, quality or fitness for any particular purpose or use of the Information and all such warranties are expressly excluded to the fullest extent that such warranties may be excluded by law. You agree to bear all risks from any use or reliance of or results of using or relying on any of the Information and acknowledge that the way you use or interpret the Information is dependent upon the exercise of your own skill and judgment. HKEX reserves the right to modify or discontinue, temporarily or permanently, the CCASS shareholding search facility and any part of the Information made available thereunder at any time with or without notice.']

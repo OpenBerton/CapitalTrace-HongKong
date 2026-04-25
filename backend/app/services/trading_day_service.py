@@ -10,7 +10,7 @@ import yfinance as yf
 
 logger = logging.getLogger(__name__)
 
-TRADING_DAYS_BASE_TICKER = "2800.HK"
+TRADING_DAYS_BASE_TICKER = "0700.HK"
 TRADING_DAYS_TTL_SECONDS = 24 * 3600
 _TRADING_DAYS_CACHE: tuple[float, list[str]] | None = None
 _TRADING_DAYS_CACHE_LOCK = asyncio.Lock()

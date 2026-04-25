@@ -1,0 +1,18 @@
+FORM ACTION https://www3.hkexnews.hk/sdw/search/searchsdw.aspx
+PAYLOAD KEYS ['__EVENTTARGET', '__EVENTARGUMENT', '__VIEWSTATE', '__VIEWSTATEGENERATOR', 'today', 'sortBy', 'sortDirection', 'originalShareholdingDate', 'alertMsg', 'txtShareholdingDate', 'txtStockCode', 'txtStockName', 'txtParticipantID', 'txtParticipantName', 'txtSelPartID']
+POST STATUS 200
+TABLE COUNT 2
+
+TABLE 0 class None
+  tr count 10
+   row ['1.', 'The shareholding information of CCASS Participants and other information made available under this CCASS shareholding search facility (the “Information”) is provided for your personal and non-commercial use only. HKEX and its subsidiaries do not take any responsibility for the Information, nor do they make any warranties, whether express or implied, as to the accuracy, adequacy, quality or fitness for any particular purpose or use of the Information and all such warranties are expressly excluded to the fullest extent that such warranties may be excluded by law. You agree to bear all risks from any use or reliance of or results of using or relying on any of the Information and acknowledge that the way you use or interpret the Information is dependent upon the exercise of your own skill and judgment. HKEX reserves the right to modify or discontinue, temporarily or permanently, the CCASS shareholding search facility and any part of the Information made available thereunder at any time with or without notice.']
+   row ['', '']
+   row ['2.', 'Unless you have been given express written permission by HKEX, you shall not, directly or indirectly:']
+   row ['', '2.1', 'distribute, display, copy, modify, download, publish, post, transmit or otherwise make available or exploit the Information or any part of it in any format thereof to any third parties, whether or not for gain;']
+
+TABLE 1 class ['table', 'table-scroll', 'table-sort', 'table-mobile-list']
+  tr count 230
+   row ['Participant ID', 'Name of CCASS Participant(* for Consenting Investor Participants )', 'Address', 'Shareholding']
+   row ['Participant ID:B01955', 'Name of CCASS Participant (* for Consenting Investor Participants ):FUTU SECURITIES INTERNATIONAL', 'Address:34/F UNITED CENTRE 95 QUEENSWAY ADMIRALTY HONG KONG', 'Shareholding:154,119,833']
+   row ['Participant ID:B01590', 'Name of CCASS Participant (* for Consenting Investor Participants ):INTERACTIVE BROKERS HONG KONG LTD', 'Address:SUITE 1512 TWO PACIFIC PLACE 88 QUEENSWAY HONG KONG', 'Shareholding:130,463,700']
+   row ['Participant ID:C00019', 'Name of CCASS Participant (* for Consenting Investor Participants ):THE HONGKONG AND SHANGHAI BANKING', 'Address:HSBC WEALTH BUSINESS SERVICES 8/F TOWER 2 & 3 HSBC CENTRE 1 SHAM MONG ROAD KOWLOON', 'Shareholding:103,205,042']
