@@ -1,4 +1,4 @@
-# CCASS Chip Analyzer
+# Hong Kong Capital Trace
 
 English version: [README.en.md](README.en.md)
 

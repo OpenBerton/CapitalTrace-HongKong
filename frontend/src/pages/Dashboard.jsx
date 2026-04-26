@@ -40,7 +40,7 @@ export default function Dashboard() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-8">
       <header className="rounded-xl bg-slate-900 p-6 text-white shadow-lg">
-        <h1 className="text-3xl font-bold">港股 CCASS 主力籌碼即時分析</h1>
+        <h1 className="text-3xl font-bold">Hong Kong Capital Trace</h1>
         <p className="mt-2 text-slate-300">輸入股票代號與日期，即時抓取 CCASS 籌碼分佈並呈現前二十大券商集中度。</p>
       </header>
       <SearchBar
